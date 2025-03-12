@@ -3,4 +3,3 @@ git
 protobuf-compiler 
 libprotobuf-dev
 gcc
-protobuf
