@@ -3,13 +3,6 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from gcld3 import NNetLanguageIdentifier
 
-MIN_BYTES = 0
-MAX_BYTES = 1000
-PROPORTION_THRESHOLD = 0.10
-
-detector = NNetLanguageIdentifier(min_num_bytes=MIN_BYTES, max_num_bytes=MAX_BYTES)
-
-
 lang_dict = {
     "af": ("Afrikaans", "Latin"),
     "am": ("Amharic", "Ethiopic"),
@@ -121,11 +114,11 @@ lang_dict = {
     "und": ("Undefined", "Undefined")
 }
 
+
+detector = NNetLanguageIdentifier(min_num_bytes=0, max_num_bytes=1000)
+
 st.title("📝 Language Detection App")
 st.write("Upload a `.txt` file to detect languages.")
-
-# Reliability Filter
-reliable_only = st.checkbox("Show only reliable detections", value=True)
 
 # File Upload
 uploaded_file = st.file_uploader("Choose a text file", type=["txt"])
@@ -142,23 +135,17 @@ if uploaded_file:
         results = [
             {
                 "language": result.language,
-                "probability": result.probability,
-                "is_reliable": result.is_reliable,
                 "proportion": result.proportion
             }
-            for result in results if result.proportion >= PROPORTION_THRESHOLD
+            for result in results if result.proportion >= 0 and result.is_reliable
         ]
-        
-        # Apply reliability filter if selected
-        if reliable_only:
-            results = [res for res in results if res.get("is_reliable", False)]
 
         if not results:
             st.warning("No significant languages detected.")
         else:
             st.subheader("Languages")
             fig, ax = plt.subplots(figsize=(6, 1))
-            languages = [f'{lang_dict[res["language"]][0]} {res["proportion"]:.1%}'  for res in results]
+            languages = [f'{lang_dict[res["language"]][0]} {res["proportion"]:.1%}' for res in results if res["language"] in lang_dict.keys()]
             proportions = [res["proportion"] for res in results]
             colors = plt.cm.Paired(np.linspace(0, 1, len(languages)))
             
@@ -171,6 +158,3 @@ if uploaded_file:
             ax.set_xticks([])
             ax.legend(loc="upper left", bbox_to_anchor=(1, 1), fontsize="small")
             st.pyplot(fig)
-
-
-
